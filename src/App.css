@@ -36,3 +36,15 @@
     transform: rotate(360deg);
   }
 }
+
+.message {
+  background-color: #36393f; /*#454d54;*/
+  padding: 1%;
+  transition: 0.3s;
+  color: white;
+  text-align: left;
+}
+
+.message:hover {
+  background-color: #2c3136;
+}
