@@ -22,7 +22,12 @@ export default function ChatInput() {
     <form onSubmit={submit}>
       <input
         className='w-100 d-flex form-control border-0 shadow-none'
-        style={{ height: '5%', minHeight: '40px', backgroundColor: '#636773', color: '#fff' }}
+        style={{
+          height: '5%',
+          minHeight: '40px',
+          backgroundColor: '#636773',
+          color: '#fff',
+        }}
         placeholder='Type here to chat'
         value={inputState}
         onInput={(e) => setInputState(e.currentTarget.value)}

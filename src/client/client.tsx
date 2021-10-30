@@ -79,9 +79,9 @@ export default class ChatAppClient {
   async sendMessage(roomId: number, message: string): Promise<void> {
     // localhost:{{port}}/api/chatroom/{{room}}/messages/send?&message=e6
     try {
-      await AxiosInstance.post(
-        `http://${this._server}/api/chatroom/${roomId.toString()}/messages/send?message=${message}`
-      );
+      await AxiosInstance.post(`http://${this._server}/api/chatroom/${roomId.toString()}/messages/send`, {
+        message,
+      });
       // if (!res) throw new Error(); // so itll all flow back into the catch statement
     } catch (err) {
       console.log(err);

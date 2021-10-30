@@ -37,4 +37,5 @@ export interface Message {
   chatRoom: ChatRoom;
   content: string;
   user: UserData;
+  createdAt: string;
 }
