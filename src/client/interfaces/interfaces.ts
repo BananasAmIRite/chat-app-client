@@ -39,3 +39,11 @@ export interface Message {
   user: UserData;
   createdAt: string;
 }
+
+export type ChatroomUser = Omit<UserData, 'chatrooms'>;
+
+export enum EventTypes {
+  MESSAGE = 'message',
+  USER_ADD = 'roomuseradd',
+  USER_REMOVE = 'roomuserremove',
+}
