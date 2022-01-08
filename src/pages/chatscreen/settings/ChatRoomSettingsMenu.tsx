@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { ClientContext } from '../../../client/client';
+import { UserModal } from '../../../components/modals/UserModal';
+import RemoveRoomBtn from './users/RemoveRoomBtn';
 import UserSettingsMenu from './users/UserSettingsMenu';
 
 export default function ChatRoomSettingsPage() {
@@ -9,6 +11,7 @@ export default function ChatRoomSettingsPage() {
   return (
     <div className='d-flex flex-column w-100' style={{ maxWidth: '85vw' }}>
       <UserSettingsMenu />
+      <RemoveRoomBtn />
     </div>
   );
 }

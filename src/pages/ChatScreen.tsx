@@ -1,9 +1,9 @@
 import { useContext, useState } from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom';
 import { ClientContext } from '../client/client';
 import ChatRoomSelectMenu from './chatscreen/ChatMenu';
 import ChatRoomMenu from './chatscreen/ChatRoomMenu';
-import ChatRoomSettingsMenu from './chatscreen/settings/ChatRoomSettingsMenu';
+import ChatRoomSettingsPage from './chatscreen/settings/ChatRoomSettingsMenu';
 
 export default function ChatScreen() {
   const { ChatAppClient } = useContext(ClientContext);
@@ -24,13 +24,16 @@ export default function ChatScreen() {
       <div className='d-flex align-items-stretch flex-grow-1'>
         <BrowserRouter>
           <ChatRoomSelectMenu />
-          <div className='d-flex w-100' style={{ backgroundColor: '#36393f', color: 'white' }}>
+          <div className='d-flex w-100 flex-grow-1' style={{ backgroundColor: '#36393f', color: 'white' }}>
             <Switch>
               <Route path='/room/:id/settings'>
-                <ChatRoomSettingsMenu />
+                <ChatRoomSettingsPage />
               </Route>
               <Route path='/room/:id'>
                 <ChatRoomMenu />
+              </Route>
+              <Route path='/'>
+                <Redirect to='/'></Redirect>
               </Route>
             </Switch>
           </div>

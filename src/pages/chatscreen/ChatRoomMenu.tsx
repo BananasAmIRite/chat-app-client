@@ -1,13 +1,13 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import Message, { MessageWithoutUser } from './chatroommenu/Message';
-import { EventTypes, Message as MessageData } from '../../client/interfaces/interfaces';
-import { useLocation, useParams } from 'react-router-dom';
+import { EventTypes, Message as MessageData, UserData } from '../../client/interfaces/interfaces';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { ClientContext } from '../../client/client';
 import ChatInput from './chatroommenu/ChatInput';
 
 export default function ChatRoomMenu() {
   // note to self: update this to complex classes
-  const { ChatAppClient } = useContext(ClientContext);
+  const { ChatAppClient, client } = useContext(ClientContext);
   const [messages, setMessages] = useState<MessageData[]>([]);
 
   const [isLoadingData, setLoadingData] = useState(false);
@@ -15,6 +15,8 @@ export default function ChatRoomMenu() {
   const [messageOffset, setMessageOffset] = useState(0);
 
   const { id } = useParams<{ id: string }>();
+
+  const history = useHistory();
 
   const location = useLocation();
 
@@ -29,30 +31,50 @@ export default function ChatRoomMenu() {
     setLastLocation(location.pathname);
 
     ChatAppClient.getMessages(messageOffset, 25, parseInt(id) || 0).then((e) => {
-      setMessages(e);
+      if (typeof e !== 'string') {
+        setMessages(e);
 
-      setMessageOffset(e.length);
+        setMessageOffset(e.length);
+      }
     });
 
     (r.current as any).scrollTop = (r.current as any).getBoundingClientRect().height;
   }, [location]);
 
-  useEffect(() => {
+  const addMsgHandler = () => {
     ChatAppClient.addMessageHandler<MessageData>('messages', (data) => {
       if (data.type !== EventTypes.MESSAGE) return;
       setMessages([data.payload, ...messages]);
       setMessageOffset(messageOffset + 1);
     });
+  };
+
+  useEffect(() => {
+    addMsgHandler();
   }, [messages]);
+
+  useEffect(() => {
+    addMsgHandler();
+  }, []);
+
+  ChatAppClient.addMessageHandler<UserData[]>('chatroommenu', (data) => {
+    if (data.type !== EventTypes.USER_REMOVE) return;
+    const users = data.payload.map((e) => e.id);
+    if (!users.includes(client.userData.id)) {
+      history.push('/');
+    }
+  });
 
   const loadMoreData = () => {
     if (isLoadingData) return;
     setLoadingData(true);
 
     ChatAppClient.getMessages(messageOffset, 25, parseInt(id) || 0).then((e) => {
-      setMessages([...messages, ...e]);
-      setMessageOffset(messageOffset + e.length);
-      setLoadingData(false);
+      if (typeof e !== 'string') {
+        setMessages([...messages, ...e]);
+        setMessageOffset(messageOffset + e.length);
+        setLoadingData(false);
+      }
     });
   };
 

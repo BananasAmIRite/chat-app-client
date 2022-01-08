@@ -46,3 +46,70 @@
   color: #72767d;
   font-size: 0.7vw;
 }
+
+.modal-background .modal-content {
+  background-color: #2c3136;
+  color: white;
+}
+
+.bg-theme-lighter {
+  background-color: #72767d;
+}
+
+.bg-theme {
+  background-color: #36393f;
+}
+
+.bg-theme-darker {
+  background-color: #2c3136;
+}
+
+a {
+  color: #00aff5 !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  text-decoration: underline !important;
+}
+
+.form-elem {
+  margin-top: 2.5%;
+  margin-bottom: 2.5%;
+}
+
+.create-room-btn[data-hover='false'] {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.create-room-btn[data-hover='true'] {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.btn-circle {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.428571429;
+  border-radius: 15px;
+}
+.btn-circle.btn-lg {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1.33;
+  border-radius: 25px;
+}
+.btn-circle.btn-xl {
+  width: 70px;
+  height: 70px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1.33;
+  border-radius: 35px;
+}

@@ -16,10 +16,11 @@ export interface ChatRoom {
   owner: UserData;
 }
 
-export interface Response<T> {
-  success: boolean;
-  code: number;
-  response: T;
+// FT is intermediate value, must NEVER be altered
+export interface Response<T, S = boolean> {
+  success: S;
+  code: S extends true ? 200 : number;
+  response: S extends true ? T : S extends false ? string : T | string;
 }
 
 export interface WebsocketResponse<T = any> {
@@ -46,4 +47,19 @@ export enum EventTypes {
   MESSAGE = 'message',
   USER_ADD = 'roomuseradd',
   USER_REMOVE = 'roomuserremove',
+  ROOM_ADD = 'roomcreate',
+  ROOM_REMOVE = 'roomremove',
+}
+
+export interface LoginResponse {
+  token: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+  code: number;
+}
+
+export interface RegisterResponse {
+  successful: true;
 }

@@ -10,6 +10,8 @@ import {
   WebsocketResponse,
   ChatroomUser,
   ChatRoom,
+  LoginResponse,
+  RegisterResponse,
 } from './interfaces/interfaces';
 
 config({
@@ -45,7 +47,6 @@ export default class ChatAppClient {
 
     this._ws.onmessage = (data) => {
       const parsed = JSON.parse(data.data as string); // ow
-      console.log(parsed);
 
       for (const e of this._messageHandlers.values()) {
         e(parsed);
@@ -61,35 +62,98 @@ export default class ChatAppClient {
 
   async addMessageHandler<T = any>(id: string, e: (data: WebsocketResponse<T>) => void) {
     // this._ws.onmessage = e;
-    console.log(id);
+    console.log(`message handler added: ${id}`);
 
     this._messageHandlers.set(id, e);
   }
 
-  async attemptLogin(options?: { token: string }): Promise<UserData | undefined> {
-    let data: Response<UserData>;
+  async createRoom(name: string): Promise<boolean> {
     try {
-      data = await (await AxiosInstance.get<Response<UserData>>(`http://${this._server}/api/user/me`)).data;
-      if (!data) throw new Error(); // so itll all flow back into the catch statement
+      await AxiosInstance.post(`http://${this._server}/api/chatroom/create?name=${name}`);
+      return true;
     } catch (err) {
-      console.log(err);
-
-      this._setClient({
-        login: LoginState.UNAUTHENTICATED,
-        userData: undefined,
-      });
-      return;
+      return false;
     }
+  }
 
-    this._setClient({
-      login: LoginState.LOGGED_IN,
-      userData: data.response,
-    });
+  async deleteRoom(roomId: number) {
+    try {
+      await AxiosInstance.post(`http://${this._server}/api/chatroom/${roomId}/delete`);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async signOut(): Promise<void> {
+    await AxiosInstance.post(`http://${this._server}/api/oauth2/user/revoke`);
+  }
+
+  async register(user: string, pw: string, hashed: boolean = false): Promise<RegisterResponse | string> {
+    try {
+      const data = await AxiosInstance.post<Response<RegisterResponse>>(
+        `http://${this._server}/api/signup?user=${user}&password=${pw}&hashed=${hashed}`
+      );
+      return data.data.response;
+    } catch (err) {
+      return err?.response?.data?.error;
+    }
+  }
+
+  async requestLogin(user: string, pw: string, hashed: boolean = false): Promise<LoginResponse | string> {
+    let data: Response<LoginResponse>;
+    try {
+      data = (
+        await AxiosInstance.get<Response<LoginResponse>>(
+          `http://${this._server}/api/oauth2/auth?user=${user}&hashed=${hashed}&password=${pw}`
+        )
+      ).data;
+    } catch (err) {
+      // TODO: return the actual data.error
+      return err?.response?.data?.error;
+    }
 
     return data?.response;
   }
 
-  async getRoom(roomId: number): Promise<ChatRoom> {
+  async attemptLogin(options?: { token: string }): Promise<UserData | false> {
+    const data = await this.requestUserData();
+
+    if (!data) {
+      this._setClient({
+        login: LoginState.UNAUTHENTICATED,
+        userData: undefined,
+      });
+      return false;
+    }
+
+    this._setClient({
+      login: LoginState.LOGGED_IN,
+      userData: data,
+    });
+
+    if (data && typeof data !== 'string') return data;
+  }
+
+  async reloadUserData(): Promise<UserData | false> {
+    // alias for attemptLogin
+    return this.attemptLogin();
+  }
+
+  async requestUserData(): Promise<UserData | false> {
+    try {
+      const data = (await AxiosInstance.get<Response<UserData, true>>(`http://${this._server}/api/user/me`)).data;
+      if (!data) throw new Error(); // so itll all flow back into the catch statement
+
+      return data.response;
+    } catch (err) {
+      console.log(err);
+
+      return false;
+    }
+  }
+
+  async getRoom(roomId: number): Promise<ChatRoom | undefined> {
     let data: Response<ChatRoom>;
 
     try {
@@ -101,10 +165,10 @@ export default class ChatAppClient {
       return;
     }
 
-    return data?.response;
+    if (data && typeof data?.response !== 'string') return data?.response;
   }
 
-  async getMessages(offset: number, amount: number, roomId: number): Promise<Message[]> {
+  async getMessages(offset: number, amount: number, roomId: number): Promise<Message[] | string> {
     let data: Response<Message[]>;
     try {
       data = await (
@@ -132,7 +196,7 @@ export default class ChatAppClient {
     }
   }
 
-  async getUsers(roomId: number): Promise<ChatroomUser[]> {
+  async getUsers(roomId: number): Promise<ChatroomUser[] | undefined> {
     // localhost:{{port}}/api/chatroom/{{room}}/messages/send?&message=e6
     let data: Response<ChatroomUser[]>;
     try {
@@ -146,7 +210,7 @@ export default class ChatAppClient {
       console.log(err);
     }
 
-    return data?.response;
+    if (data && typeof data?.response !== 'string') return data?.response;
   }
 
   async addUser(roomId: number, userId: number): Promise<void> {
@@ -164,6 +228,30 @@ export default class ChatAppClient {
       await AxiosInstance.post(
         `http://${this._server}/api/chatroom/${roomId.toString()}/users/remove?userId=${userId}`
       );
+      // if (!res) throw new Error(); // so itll all flow back into the catch statement
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async queryUserByUsername(userName: string): Promise<UserData | string> {
+    try {
+      const data = await (
+        await AxiosInstance.get<Response<UserData>>(`http://${this._server}/api/user/getuser/byName/${userName}`)
+      ).data;
+      return data.response;
+      // if (!res) throw new Error(); // so itll all flow back into the catch statement
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async queryUserById(id: string): Promise<UserData | string> {
+    try {
+      const data = await (
+        await AxiosInstance.get<Response<UserData>>(`http://${this._server}/api/user/getuser/byId/${id}`)
+      ).data;
+      return data.response;
       // if (!res) throw new Error(); // so itll all flow back into the catch statement
     } catch (err) {
       console.log(err);
