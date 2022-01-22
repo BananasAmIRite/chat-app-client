@@ -48,7 +48,7 @@ export enum EventTypes {
   USER_ADD = 'roomuseradd',
   USER_REMOVE = 'roomuserremove',
   ROOM_ADD = 'roomcreate',
-  ROOM_REMOVE = 'roomremove',
+  ROOM_REMOVE = 'roomremove', // event type pretty much
 }
 
 export interface LoginResponse {
