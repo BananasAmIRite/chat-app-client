@@ -24,46 +24,43 @@ export default function ChatRoomMenu() {
 
   const r = useRef(null);
 
+  // const addMsgHandler = () => {
+  //   ChatAppClient.addMessageHandler<MessageData>('messages', (data) => {
+  //     if (data.type !== EventTypes.MESSAGE) return;
+  //     setMessages([data.payload, ...messages]);
+  //     setMessageOffset(messageOffset + 1);
+  //   }); // i have to
+  // };
+
+  // useEffect(() => {
+  //   addMsgHandler();
+  // }, [messages]);
+
+  // useEffect(() => {
+  //   // oh ok
+  //   return () => {};
+  // }, [messages]);
+
   useEffect(() => {
-    // runs on location, i.e. route change
+    ChatAppClient.addMessageHandler<MessageData>('messages', (data) => {
+      if (data.type !== EventTypes.MESSAGE) return;
+      setMessages((messages) => [data.payload, ...messages]);
+      setMessageOffset((messageOffset) => messageOffset + 1);
+    });
 
-    if (location.pathname === lastLocation) return;
-    setLastLocation(location.pathname);
-
-    ChatAppClient.getMessages(messageOffset, 25, parseInt(id) || 0).then((e) => {
-      if (typeof e !== 'string') {
-        setMessages(e);
-
-        setMessageOffset(e.length);
+    ChatAppClient.addMessageHandler<UserData[]>('chatroommenu', (data) => {
+      if (data.type !== EventTypes.USER_REMOVE) return;
+      const users = data.payload.map((e) => e.id);
+      if (!users.includes(client.userData.id)) {
+        history.push('/');
       }
     });
 
-    (r.current as any).scrollTop = (r.current as any).getBoundingClientRect().height;
-  }, [location]);
-
-  const addMsgHandler = () => {
-    ChatAppClient.addMessageHandler<MessageData>('messages', (data) => {
-      if (data.type !== EventTypes.MESSAGE) return;
-      setMessages([data.payload, ...messages]);
-      setMessageOffset(messageOffset + 1);
-    });
-  };
-
-  useEffect(() => {
-    addMsgHandler();
-  }, [messages]);
-
-  useEffect(() => {
-    addMsgHandler();
+    return () => {
+      ChatAppClient.removeMessageHandler('messages');
+      ChatAppClient.removeMessageHandler('chatroommenu');
+    };
   }, []);
-
-  ChatAppClient.addMessageHandler<UserData[]>('chatroommenu', (data) => {
-    if (data.type !== EventTypes.USER_REMOVE) return;
-    const users = data.payload.map((e) => e.id);
-    if (!users.includes(client.userData.id)) {
-      history.push('/');
-    }
-  });
 
   const loadMoreData = () => {
     if (isLoadingData) return;
@@ -83,25 +80,66 @@ export default function ChatRoomMenu() {
       loadMoreData();
   };
 
+  // console.log('newest offset:' + messageOffset);
+
+  useEffect(() => {
+    // runs on location, i.e. route change
+
+    const loadMessages = async (
+      lastMessages: string[] = undefined,
+      _messages: MessageData[] = [],
+      _tempOffset: number = messageOffset
+    ) => {
+      let e;
+
+      if (
+        lastMessages !== undefined &&
+        (lastMessages.length === 0 || r.current.scrollHeight > r.current.clientHeight)
+      ) {
+        setMessageOffset(_tempOffset);
+
+        return;
+      }
+
+      // lastMessage isnt undefined and (either no more messages to load or enough messages have been loaded for a scroll bar to appear)
+      e = await ChatAppClient.getMessages(_tempOffset, 25, parseInt(id) || 0);
+
+      if (typeof e !== 'string') {
+        setMessages([...messages, ..._messages]);
+
+        await loadMessages(e, [...e, ..._messages], _tempOffset + e.length);
+      }
+    };
+
+    if (location.pathname === lastLocation) return;
+    setLastLocation(location.pathname);
+
+    loadMessages();
+
+    (r.current as any).scrollTop = (r.current as any).getBoundingClientRect().height;
+  }, [location]);
+
   return (
-    <div className='d-flex flex-column-reverse w-100' style={{ maxWidth: '85vw' }}>
+    <div className='d-flex flex-column-reverse w-100' style={{ maxWidth: '95vw', maxHeight: '100vh' }}>
       {
         // weird dumb hacky way of doing it idk what else i can do
       }
       <ChatInput />
       <div className='w-100 d-flex flex-column-reverse overflow-auto flex-grow-1' ref={r} onScroll={onScroll}>
         {/* <Message message={'abcde'} user='BananasAmIRite' time={new Date()} /> */}
-        {messages.map((e, i) => {
-          if (
-            messages[i + 1] &&
-            messages[i + 1].user.id === e.user.id &&
-            new Date(e.createdAt).getTime() - new Date(messages[i + 1].createdAt).getTime() < 5 * 60 * 1000 // within 5 mins
-          ) {
-            return <MessageWithoutUser message={e.content} key={e.id} time={new Date(e.createdAt)} />;
-          }
+        {messages
+          .sort((a, b) => b.id - a.id)
+          .map((e, i) => {
+            if (
+              messages[i + 1] &&
+              messages[i + 1].user.id === e.user.id &&
+              new Date(e.createdAt).getTime() - new Date(messages[i + 1].createdAt).getTime() < 5 * 60 * 1000 // within 5 mins
+            ) {
+              return <MessageWithoutUser message={e.content} key={e.id} time={new Date(e.createdAt)} />;
+            }
 
-          return <Message message={e.content} user={e.user.username} key={e.id} time={new Date(e.createdAt)} />;
-        })}
+            return <Message message={e.content} user={e.user.username} key={e.id} time={new Date(e.createdAt)} />;
+          })}
         {isLoadingData ? <span style={{ alignSelf: 'center' }}>Loading...</span> : <></>}
       </div>
     </div>

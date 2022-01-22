@@ -7,9 +7,8 @@ export default function UserActionMenu() {
 
   const history = useHistory();
 
-  const signOut: MouseEventHandler<HTMLButtonElement> = async (e) => {
+  const signOut: MouseEventHandler<HTMLButtonElement> = async () => {
     ChatAppClient.signOut();
-
     history.go(0);
   };
 

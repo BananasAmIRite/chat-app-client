@@ -29,10 +29,16 @@ export default function UserSettingsMenu() {
     });
   }, [location]);
 
-  ChatAppClient.addMessageHandler<ChatroomUser[]>('users', (data) => {
-    if (data.type !== EventTypes.USER_REMOVE && data.type !== EventTypes.USER_ADD) return;
-    setUsers(data.payload);
-  });
+  useEffect(() => {
+    ChatAppClient.addMessageHandler<ChatroomUser[]>('users', (data) => {
+      if (data.type !== EventTypes.USER_REMOVE && data.type !== EventTypes.USER_ADD) return;
+      setUsers(data.payload);
+    });
+
+    return () => {
+      ChatAppClient.removeMessageHandler('users');
+    };
+  }, []);
 
   return (
     <div id='user-settings-menu-container'>

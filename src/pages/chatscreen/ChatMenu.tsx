@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { GearFill } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
 import { ClientContext } from '../../client/client';
@@ -18,20 +18,26 @@ export default function ChatRoomSelectMenu() {
     setHover(false);
   };
 
-  ChatAppClient.addMessageHandler<UserData[]>('chatmenu', (data) => {
-    if (
-      data.type !== EventTypes.USER_REMOVE &&
-      data.type !== EventTypes.USER_ADD &&
-      data.type !== EventTypes.ROOM_ADD &&
-      data.type !== EventTypes.ROOM_REMOVE
-    )
-      return;
-    // const users = data.payload.map((e) => e.id);
-    // if (!users.includes(client.userData.id)) {
-    // ddos? never heard of that before.
-    ChatAppClient.reloadUserData();
-    // }
-  });
+  useEffect(() => {
+    ChatAppClient.addMessageHandler<UserData[]>('chatmenu', (data) => {
+      if (
+        data.type !== EventTypes.USER_REMOVE &&
+        data.type !== EventTypes.USER_ADD &&
+        data.type !== EventTypes.ROOM_ADD &&
+        data.type !== EventTypes.ROOM_REMOVE
+      )
+        return;
+      // const users = data.payload.map((e) => e.id);
+      // if (!users.includes(client.userData.id)) {
+      // ddos? never heard of that before.
+      ChatAppClient.reloadUserData();
+      // }
+
+      return () => {
+        ChatAppClient.removeMessageHandler('chatmenu');
+      };
+    });
+  }, []);
 
   return (
     <div className='bg-dark text-white' style={{ minWidth: '200px', width: '15vw' }}>

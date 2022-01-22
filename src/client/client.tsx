@@ -25,6 +25,7 @@ export interface IClientContext {
 }
 
 export default class ChatAppClient {
+  // useFetch()!!!!!!!
   private _server: string;
   private _ws: WebSocket;
   private _messageHandlers: Map<string, (data: WebsocketResponse<any>) => void>;
@@ -60,11 +61,18 @@ export default class ChatAppClient {
     this._connCloseListener = e;
   }
 
-  async addMessageHandler<T = any>(id: string, e: (data: WebsocketResponse<T>) => void) {
+  addMessageHandler<T = any>(id: string, e: (data: WebsocketResponse<T>) => void) {
     // this._ws.onmessage = e;
+    // this is called a LOT as well
+    // the client opens a websocket connection with the server
+    //
     console.log(`message handler added: ${id}`);
 
     this._messageHandlers.set(id, e);
+  }
+
+  removeMessageHandler(id: string): boolean {
+    return this._messageHandlers.delete(id);
   }
 
   async createRoom(name: string): Promise<boolean> {
@@ -266,6 +274,7 @@ export const ClientContext = createContext<IClientContext>({
 });
 
 export const ClientProvider = (props: any) => {
+  // kinda bad cuz i have to import this in every file by using useContext(ClientContext)
   const [client, setClient] = useState({
     login: LoginState.NOT_LOGGED_IN,
     userData: undefined,
