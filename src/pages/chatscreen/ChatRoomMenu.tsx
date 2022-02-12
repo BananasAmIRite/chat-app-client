@@ -16,8 +16,6 @@ export default function ChatRoomMenu() {
 
   const { id } = useParams<{ id: string }>();
 
-  const history = useHistory();
-
   const location = useLocation();
 
   const [lastLocation, setLastLocation] = useState('');
@@ -44,21 +42,13 @@ export default function ChatRoomMenu() {
   useEffect(() => {
     ChatAppClient.addMessageHandler<MessageData>('messages', (data) => {
       if (data.type !== EventTypes.MESSAGE) return;
+      console.log('messages is currently handling event');
       setMessages((messages) => [data.payload, ...messages]);
       setMessageOffset((messageOffset) => messageOffset + 1);
     });
 
-    ChatAppClient.addMessageHandler<UserData[]>('chatroommenu', (data) => {
-      if (data.type !== EventTypes.USER_REMOVE) return;
-      const users = data.payload.map((e) => e.id);
-      if (!users.includes(client.userData.id)) {
-        history.push('/');
-      }
-    });
-
     return () => {
       ChatAppClient.removeMessageHandler('messages');
-      ChatAppClient.removeMessageHandler('chatroommenu');
     };
   }, []);
 

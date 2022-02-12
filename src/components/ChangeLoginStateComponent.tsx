@@ -8,7 +8,7 @@ export default function ChangeLoginStateComponent() {
   return (
     <button
       onClick={() => {
-        ChatAppClient.attemptLogin();
+        ChatAppClient.attemptLogin(setClient);
         setClient({
           login:
             client.login === LoginState.NOT_LOGGED_IN

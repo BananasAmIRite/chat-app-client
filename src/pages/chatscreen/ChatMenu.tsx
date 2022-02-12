@@ -27,16 +27,17 @@ export default function ChatRoomSelectMenu() {
         data.type !== EventTypes.ROOM_REMOVE
       )
         return;
+      console.log('chatmenu is currently handling event');
       // const users = data.payload.map((e) => e.id);
       // if (!users.includes(client.userData.id)) {
       // ddos? never heard of that before.
-      ChatAppClient.reloadUserData();
+      // ChatAppClient.reloadUserData();
       // }
-
-      return () => {
-        ChatAppClient.removeMessageHandler('chatmenu');
-      };
     });
+
+    return () => {
+      ChatAppClient.removeMessageHandler('chatmenu');
+    };
   }, []);
 
   return (
@@ -65,20 +66,24 @@ export default function ChatRoomSelectMenu() {
 
 export function ChatRoomSelectItem(props: { chatId: number; display: string }) {
   return (
-    <Link to={`/room/${props.chatId}`}>
-      <button className='btn btn-dark mt-2 text-truncate' style={{ width: '90%' }}>
-        <ChatRoomSelectSettingsItem chatId={props.chatId}></ChatRoomSelectSettingsItem>
-        <br />
-        {props.display}
-      </button>
-    </Link>
+    <div>
+      <Link to={`/room/${props.chatId}`}>
+        <button className='btn btn-dark mt-2 text-truncate' style={{ width: '90%' }}>
+          <ChatRoomSelectSettingsItem chatId={props.chatId}></ChatRoomSelectSettingsItem>
+          <br />
+          {props.display}
+        </button>
+      </Link>
+    </div>
   );
 }
 
 export function ChatRoomSelectSettingsItem(props: { chatId: number }) {
   return (
-    <Link to={`/room/${props.chatId}/settings`}>
-      <GearFill style={{ float: 'right', width: '10%', filter: 'invert(50%)' }} />
-    </Link>
+    <div>
+      <Link to={`/room/${props.chatId}/settings`}>
+        <GearFill style={{ float: 'right', width: '10%', filter: 'invert(50%)' }} />
+      </Link>
+    </div>
   );
 }

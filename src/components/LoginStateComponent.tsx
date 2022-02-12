@@ -1,14 +1,22 @@
 import { useContext, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { ClientContext } from '../client/client';
 import { LoginState } from '../client/interfaces/interfaces';
 import ChatScreen from '../pages/ChatScreen';
 import LoginSignupScreen from '../pages/LoginSignupScreen';
 
 export default function LoginStateComponent() {
-  const { client, ChatAppClient } = useContext(ClientContext);
+  const { client, setClient, ChatAppClient } = useContext(ClientContext);
 
   useEffect(() => {
-    ChatAppClient.attemptLogin();
+    console.log(ChatAppClient);
+
+    ChatAppClient.attemptLogin(setClient).then((e) => {
+      console.log(e);
+    });
+    // setTimeout(() => {
+    //   console.log(client.login);
+    // }, 5000);
   }, []);
 
   return (

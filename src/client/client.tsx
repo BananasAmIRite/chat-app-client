@@ -1,4 +1,4 @@
-import { createContext, Dispatch, SetStateAction, useState } from 'react';
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
 import AxiosInstance from '../AxiosInstance';
 import { config } from 'dotenv';
 import {
@@ -24,19 +24,45 @@ export interface IClientContext {
   ChatAppClient: ChatAppClient;
 }
 
+class TMAP<T, V> extends Map<T, V> {
+  delete(t: T): boolean {
+    console.log('deleting key: ' + t);
+
+    return super.delete(t);
+  }
+
+  set(t: T, v: V): this {
+    console.log('setting: ' + t + ', ' + v);
+
+    return super.set(t, v);
+  }
+}
+
+let id = 0;
+
 export default class ChatAppClient {
   // useFetch()!!!!!!!
   private _server: string;
   private _ws: WebSocket;
-  private _messageHandlers: Map<string, (data: WebsocketResponse<any>) => void>;
+  private _messageHandlers: TMAP<string, (data: WebsocketResponse<any>) => void>;
   private _connCloseListener: () => void;
+  private _id: number;
   constructor(
     private _client?: Partial<ClientState>,
     private _setClient?: Dispatch<Partial<SetStateAction<ClientState>>>
   ) {
     this._server = `${process.env.REACT_APP_SERVER_IP}:${process.env.REACT_APP_SERVER_PORT}`;
     this._messageHandlers = new Map();
+    console.log('chat app constructor ' + id);
+
     this.setupWebsocket();
+
+    this._id = id;
+    id += 1;
+
+    // setInterval(() => {
+    //   console.log('id: ' + this._id + ', ' + this._messageHandlers);
+    // }, 1000);
   }
 
   get server() {
@@ -48,6 +74,11 @@ export default class ChatAppClient {
 
     this._ws.onmessage = (data) => {
       const parsed = JSON.parse(data.data as string); // ow
+
+      console.log(`(${this._id}) received payload: `);
+      console.log(parsed);
+      console.log(`(${this._id}) handlers: `);
+      console.log(this._messageHandlers);
 
       for (const e of this._messageHandlers.values()) {
         e(parsed);
@@ -65,13 +96,20 @@ export default class ChatAppClient {
     // this._ws.onmessage = e;
     // this is called a LOT as well
     // the client opens a websocket connection with the server
-    //
+
     console.log(`message handler added: ${id}`);
+    console.log('value: ' + e);
+    console.log('current stuff: ');
+    console.log(this._messageHandlers);
 
     this._messageHandlers.set(id, e);
+
+    console.log(this._messageHandlers);
   }
 
   removeMessageHandler(id: string): boolean {
+    console.log('removed message handler: ' + id);
+
     return this._messageHandlers.delete(id);
   }
 
@@ -124,28 +162,31 @@ export default class ChatAppClient {
     return data?.response;
   }
 
-  async attemptLogin(options?: { token: string }): Promise<UserData | false> {
+  async attemptLogin(setClient, options?: { token: string }): Promise<UserData | false> {
     const data = await this.requestUserData();
+    console.log('attempting login');
+    console.log(data);
 
     if (!data) {
-      this._setClient({
+      setClient({
         login: LoginState.UNAUTHENTICATED,
         userData: undefined,
       });
       return false;
     }
 
-    this._setClient({
+    setClient({
       login: LoginState.LOGGED_IN,
       userData: data,
     });
+    console.log('e: ' + this._client.login);
 
     if (data && typeof data !== 'string') return data;
   }
 
-  async reloadUserData(): Promise<UserData | false> {
-    // alias for attemptLogin
-    return this.attemptLogin();
+  async reloadUserData() {
+    // alias
+    return;
   }
 
   async requestUserData(): Promise<UserData | false> {
@@ -273,6 +314,8 @@ export const ClientContext = createContext<IClientContext>({
   ChatAppClient: null,
 });
 
+let currentChatAppClient;
+
 export const ClientProvider = (props: any) => {
   // kinda bad cuz i have to import this in every file by using useContext(ClientContext)
   const [client, setClient] = useState({
@@ -280,7 +323,24 @@ export const ClientProvider = (props: any) => {
     userData: undefined,
   });
 
-  const cac = new ChatAppClient(client, setClient);
+  // const client = {
+  //   login: LoginState.NOT_LOGGED_IN,
+  //   userData: undefined,
+  // };
+  // const setClient = (d) => {
+  //   console.log('setting...');
+  //   console.log(d);
+
+  //   for (const k in d) {
+  //     client[k] = d[k];
+  //   }
+  // };
+
+  console.log('provider rerendered');
+
+  const cac = currentChatAppClient === null ? new ChatAppClient(client, setClient) : currentChatAppClient;
+
+  currentChatAppClient = cac;
   return (
     <ClientContext.Provider value={{ client, setClient, ChatAppClient: cac }}>{props.children}</ClientContext.Provider>
   );

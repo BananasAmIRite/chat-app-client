@@ -32,6 +32,7 @@ export default function UserSettingsMenu() {
   useEffect(() => {
     ChatAppClient.addMessageHandler<ChatroomUser[]>('users', (data) => {
       if (data.type !== EventTypes.USER_REMOVE && data.type !== EventTypes.USER_ADD) return;
+      console.log('users is currently handling event');
       setUsers(data.payload);
     });
 
