@@ -7,7 +7,7 @@ import CreateRoomBtn from './chatmenu/CreateRoomBtn';
 import UserActionMenu from './chatmenu/UserActionMenu';
 
 export default function ChatRoomSelectMenu() {
-  const { client, ChatAppClient } = useContext(ClientContext);
+  const { client, setClient, ChatAppClient } = useContext(ClientContext);
 
   const [hover, setHover] = useState<boolean>(false);
 
@@ -31,7 +31,7 @@ export default function ChatRoomSelectMenu() {
       // const users = data.payload.map((e) => e.id);
       // if (!users.includes(client.userData.id)) {
       // ddos? never heard of that before.
-      // ChatAppClient.reloadUserData();
+      ChatAppClient.reloadUserData(setClient);
       // }
     });
 
